@@ -1,0 +1,13 @@
+{
+  "enable": {
+    "description": "是否启用关键词触发功能",
+    "type": "bool",
+    "default": true
+  },
+  "triggers": {
+    "description": "自定义触发词列表（消息中只要包含任意一个词就会触发回复）",
+    "hint": "消息中只要含有列表中的词即可唤醒回复",
+    "type": "list",
+    "default": []
+  }
+}
