@@ -1,8 +1,10 @@
 import json
 import os
+from pathlib import Path
+
+from astrbot.api import logger
 from astrbot.api.event import filter, AstrMessageEvent
-from astrbot.api.star import Context, Star, register
-from astrbot.core import logger
+from astrbot.api.star import Context, Star, StarTools, register
 
 
 @register(
@@ -15,22 +17,28 @@ class CustomTriggerPlugin(Star):
     def __init__(self, context: Context, config: dict | None = None):
         super().__init__(context)
         self.context = context
-        self.config_path = "/root/AstrBot/data/config/astrbot_plugin_dot_trigger_config.json"
+        self.config = config if isinstance(config, dict) else {}
 
-        # 优先读取配置文件
-        if os.path.exists(self.config_path):
+        # 使用框架规范的插件专属数据存储目录: data/plugin_data/astrbot_plugin_dot_trigger
+        try:
+            self.data_dir = StarTools.get_data_dir("astrbot_plugin_dot_trigger")
+        except Exception:
+            self.data_dir = Path("data/plugin_data/astrbot_plugin_dot_trigger")
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        self.storage_file = self.data_dir / "custom_triggers.json"
+
+        # 如果已有本地持久化数据，则合并载入
+        if self.storage_file.exists():
             try:
-                with open(self.config_path, "r", encoding="utf-8") as f:
-                    file_cfg = json.load(f)
-                    if isinstance(file_cfg, dict):
-                        self.config = file_cfg
-                    else:
-                        self.config = config if isinstance(config, dict) else {}
+                with open(self.storage_file, "r", encoding="utf-8") as f:
+                    saved_data = json.load(f)
+                    if isinstance(saved_data, dict):
+                        if "enable" in saved_data:
+                            self.config["enable"] = saved_data["enable"]
+                        if "triggers" in saved_data and isinstance(saved_data["triggers"], list):
+                            self.config["triggers"] = saved_data["triggers"]
             except Exception as e:
-                logger.error(f"[CustomTrigger] 读取配置文件失败: {e}")
-                self.config = config if isinstance(config, dict) else {}
-        else:
-            self.config = config if isinstance(config, dict) else {}
+                logger.error(f"[CustomTrigger] 读取持久化数据失败: {e}")
 
         # 清除旧版遗留的句号配置项
         if "allow_chinese_dot" in self.config:
@@ -42,15 +50,19 @@ class CustomTriggerPlugin(Star):
         if "triggers" not in self.config or not isinstance(self.config["triggers"], list):
             self.config["triggers"] = []
 
-        self._save_config()
+        self._save_data()
 
-    def _save_config(self):
+    def _save_data(self):
+        """将触发词数据持久化保存到标准 plugin_data 目录下"""
         try:
-            os.makedirs(os.path.dirname(self.config_path), exist_ok=True)
-            with open(self.config_path, "w", encoding="utf-8") as f:
-                json.dump(self.config, f, ensure_ascii=False, indent=2)
+            data = {
+                "enable": self.config.get("enable", True),
+                "triggers": self.config.get("triggers", []),
+            }
+            with open(self.storage_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            logger.error(f"[CustomTrigger] 保存配置文件失败: {e}")
+            logger.error(f"[CustomTrigger] 保存持久化数据失败: {e}")
 
     @filter.event_message_type(filter.EventMessageType.ALL)
     async def on_trigger_message(self, event: AstrMessageEvent):
@@ -107,12 +119,12 @@ class CustomTriggerPlugin(Star):
 
         if action in ["开", "开启", "on", "enable"]:
             self.config["enable"] = True
-            self._save_config()
+            self._save_data()
             yield event.plain_result("触发回复功能已开启！包含任何设定关键词的消息都会唤醒回复。")
 
         elif action in ["关", "关闭", "off", "disable"]:
             self.config["enable"] = False
-            self._save_config()
+            self._save_data()
             yield event.plain_result("触发回复功能已关闭！")
 
         elif action in ["添加", "add", "+"]:
@@ -127,7 +139,7 @@ class CustomTriggerPlugin(Star):
                 yield event.plain_result(f"触发词“{arg}”已经在列表里啦！")
                 return
             triggers.append(arg)
-            self._save_config()
+            self._save_data()
             yield event.plain_result(f"成功添加触发词：“{arg}”！\n当前触发词：{', '.join(triggers)}")
 
         elif action in ["删除", "del", "remove", "删", "-"]:
@@ -140,7 +152,7 @@ class CustomTriggerPlugin(Star):
                 return
             triggers.remove(arg)
             self.config["triggers"] = triggers
-            self._save_config()
+            self._save_data()
             yield event.plain_result(f"成功删除触发词：“{arg}”！\n当前触发词：{', '.join(triggers) if triggers else '暂无'}")
 
         elif action in ["列表", "list", "词", "words"]:
