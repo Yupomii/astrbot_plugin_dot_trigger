@@ -2,6 +2,6 @@ name: astrbot_plugin_dot_trigger
 display_name: 自定义关键词唤醒触发
 desc: 消息中包含用户设定的触发词时自动唤醒并触发LLM回复，无需艾特或特定前缀
 help: 聊天中只要带有设定的触发词即可触发回复，支持指令：/触发 开 | /触发 关 | /触发 添加 <词> | /触发 删除 <词> | /触发 列表 | /触发 状态
-version: 1.0.0
+version: 1.0.1
 author: Yupomii
 repo: https://github.com/Yupomii/astrbot_plugin_dot_trigger
