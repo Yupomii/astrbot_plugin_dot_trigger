@@ -11,7 +11,7 @@ from astrbot.api.star import Context, Star, StarTools, register
     "astrbot_plugin_dot_trigger",
     "Yupomii",
     "消息包含设定关键词时自动唤醒LLM回复",
-    "1.0.4",
+    "1.0.5",
 )
 class CustomTriggerPlugin(Star):
     def __init__(self, context: Context, config: dict | None = None):
