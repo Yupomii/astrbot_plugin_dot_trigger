@@ -11,7 +11,7 @@ from astrbot.api.star import Context, Star, StarTools, register
     "astrbot_plugin_dot_trigger",
     "Yupomii",
     "消息包含设定关键词时自动唤醒LLM回复",
-    "1.0.3",
+    "1.0.4",
 )
 class CustomTriggerPlugin(Star):
     def __init__(self, context: Context, config: dict | None = None):
@@ -115,12 +115,12 @@ class CustomTriggerPlugin(Star):
         if action in ["开", "开启", "on", "enable"]:
             self.config["enable"] = True
             self._save_data()
-            yield event.plain_result("触发回复功能已开启！包含任何设定关键词的消息都会唤醒回复。")
+            yield event.plain_result("触发回复功能已开启，包含任何设定关键词的消息都会唤醒回复。")
 
         elif action in ["关", "关闭", "off", "disable"]:
             self.config["enable"] = False
             self._save_data()
-            yield event.plain_result("触发回复功能已关闭！")
+            yield event.plain_result("触发回复功能已关闭。")
 
         elif action in ["添加", "add", "+"]:
             if not arg:
@@ -131,11 +131,11 @@ class CustomTriggerPlugin(Star):
                 triggers = []
                 self.config["triggers"] = triggers
             if arg in triggers:
-                yield event.plain_result(f"触发词“{arg}”已经在列表里啦！")
+                yield event.plain_result(f"触发词“{arg}”已经在列表里啦。")
                 return
             triggers.append(arg)
             self._save_data()
-            yield event.plain_result(f"成功添加触发词：“{arg}”！\n当前触发词：{', '.join(triggers)}")
+            yield event.plain_result(f"成功添加触发词：“{arg}”\n当前触发词：{', '.join(triggers)}")
 
         elif action in ["删除", "del", "remove", "删", "-"]:
             if not arg:
@@ -143,12 +143,12 @@ class CustomTriggerPlugin(Star):
                 return
             triggers = self.config.get("triggers", [])
             if not isinstance(triggers, list) or arg not in triggers:
-                yield event.plain_result(f"列表中没有找到触发词“{arg}”！")
+                yield event.plain_result(f"列表中没有找到触发词“{arg}”。")
                 return
             triggers.remove(arg)
             self.config["triggers"] = triggers
             self._save_data()
-            yield event.plain_result(f"成功删除触发词：“{arg}”！\n当前触发词：{', '.join(triggers) if triggers else '暂无'}")
+            yield event.plain_result(f"成功删除触发词：“{arg}”\n当前触发词：{', '.join(triggers) if triggers else '暂无'}")
 
         elif action in ["列表", "list", "词", "words"]:
             triggers = self.config.get("triggers", [])
