@@ -6,8 +6,11 @@
   },
   "triggers": {
     "description": "自定义触发词列表（消息中只要包含任意一个词就会触发回复）",
-    "hint": "消息中只要含有列表中的词即可唤醒回复",
     "type": "list",
-    "default": []
+    "default": [],
+    "items": {
+      "type": "string"
+    },
+    "hint": "消息中只要含有列表中的词即可唤醒回复"
   }
 }

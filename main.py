@@ -11,7 +11,7 @@ from astrbot.api.star import Context, Star, StarTools, register
     "astrbot_plugin_dot_trigger",
     "Yupomii",
     "消息包含设定关键词时自动唤醒LLM回复",
-    "1.0.2",
+    "1.0.3",
 )
 class CustomTriggerPlugin(Star):
     def __init__(self, context: Context, config: dict | None = None):
@@ -19,7 +19,7 @@ class CustomTriggerPlugin(Star):
         self.context = context
         self.config = config if isinstance(config, dict) else {}
 
-        # 使用框架规范的插件专属数据存储目录: data/plugin_data/astrbot_plugin_dot_trigger
+        # 使用框架规范的插件数据目录备份
         try:
             self.data_dir = StarTools.get_data_dir("astrbot_plugin_dot_trigger")
         except Exception:
@@ -27,33 +27,28 @@ class CustomTriggerPlugin(Star):
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.storage_file = self.data_dir / "custom_triggers.json"
 
-        # 如果已有本地持久化数据，则合并载入
-        if self.storage_file.exists():
-            try:
-                with open(self.storage_file, "r", encoding="utf-8") as f:
-                    saved_data = json.load(f)
-                    if isinstance(saved_data, dict):
-                        if "enable" in saved_data:
-                            self.config["enable"] = saved_data["enable"]
-                        if "triggers" in saved_data and isinstance(saved_data["triggers"], list):
-                            self.config["triggers"] = saved_data["triggers"]
-            except Exception as e:
-                logger.error(f"[CustomTrigger] 读取持久化数据失败: {e}")
-
-        # 清除旧版遗留的句号配置项
-        if "allow_chinese_dot" in self.config:
-            self.config.pop("allow_chinese_dot", None)
-
         # 补全默认项
         if "enable" not in self.config:
             self.config["enable"] = True
         if "triggers" not in self.config or not isinstance(self.config["triggers"], list):
             self.config["triggers"] = []
 
+        # 清除历史残留项
+        if "allow_chinese_dot" in self.config:
+            self.config.pop("allow_chinese_dot", None)
+
         self._save_data()
 
     def _save_data(self):
-        """将触发词数据持久化保存到标准 plugin_data 目录下"""
+        """保存配置数据：优先调用 AstrBot 原生配置持久化，并备份到 plugin_data 目录"""
+        # 1. 调用框架原生配置持久化
+        try:
+            if hasattr(self.config, "save_config") and callable(self.config.save_config):
+                self.config.save_config()
+        except Exception as e:
+            logger.error(f"[CustomTrigger] 调用 self.config.save_config() 失败: {e}")
+
+        # 2. 规范保存到 plugin_data 备份
         try:
             data = {
                 "enable": self.config.get("enable", True),
