@@ -2,6 +2,9 @@
 
 <div align="center">
   <img src="logo.png" width="128" alt="logo" />
+  <br/>
+  <br/>
+  <img src="https://count.getloli.com/@Yupomii_dot_trigger?theme=gelbooru" alt="Moe Counter" />
 </div>
 
 一个简单轻量的 AstrBot 插件，支持通过自定义关键词在群聊或私聊中随时唤醒机器人并触发 LLM 回复。
