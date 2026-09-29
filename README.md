@@ -1,9 +1,6 @@
 # astrbot_plugin_dot_trigger (自定义关键词唤醒触发)
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/Yupomii/astrbot_plugin_dot_trigger/main/logo.png" width="128" alt="logo" />
-  <br/>
-  <br/>
   <img src="https://count.getloli.com/@Yupomii_dot_trigger?theme=gelbooru" alt="Moe Counter" />
 </div>
 
